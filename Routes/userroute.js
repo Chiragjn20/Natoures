@@ -1,9 +1,9 @@
 const express = require('express')
 const fs = require('fs');
-
-const Users = JSON.parse(
-    fs.readFileSync(`${__dirname}/../dev-data/data/users.json`)
-  );
+const authController = require('./../Controller/authController')
+// const Users = JSON.parse(
+//     fs.readFileSync(`${__dirname}/../dev-data/data/users.json`)
+//   );
   
 const getAllUsers = (req, res) => {
     const time = req.requetTime;
@@ -40,6 +40,6 @@ const getAllUsers = (req, res) => {
   const router = express.Router();
 
   router.route('/').get(getAllUsers).post(createUser);
-
+  router.post('/signup' , authController.signup)
 
   module.exports = router

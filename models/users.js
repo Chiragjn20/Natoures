@@ -7,21 +7,27 @@ const userSchema = new mongoose.Schema({
       minlength: [4 , 'Tour atleast have length of 5']
     } ,
     email :{
-        type : email,
+        type : String,
         required : [true , 'Tour must have a email'],
         unique : true,
-        lowercase : true,
-        validate :[validator.isEmail , 'please provide a valid email']
-
+        lowercase : true
     },
     password :{
-        type : password,
+        type : String,
         min :[6 , 'password too short'],
         required : [true , 'Please provide a password']
     },
     passwordConfirm :{
         type : String,
-        required : true
+        required : true,
+        //this only work on create and save
+        validate : {
+            validator : function(el){
+                return el === this.password;
+            },
+            message : 'Password cannot be different'
+        }
+
     },
     photo : String
     
