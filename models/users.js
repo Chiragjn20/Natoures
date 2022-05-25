@@ -17,7 +17,8 @@ const userSchema = new mongoose.Schema({
     password :{
         type : String,
         min :[6 , 'password too short'],
-        required : [true , 'Please provide a password']
+        required : [true , 'Please provide a password'],
+        select : false
     },
     passwordConfirm :{
         type : String,
@@ -28,10 +29,17 @@ const userSchema = new mongoose.Schema({
                 return el === this.password;
             },
             message : 'Password cannot be different'
-        }
+        },
+        select : false
 
     },
-    photo : String
+    role :{
+      type : String,
+      enum : ['user', 'guide' ,'lead-guide' , 'admin'],
+      default : 'user'
+    },
+    photo : String,
+    passwordChangedAt : Date
     
   })
 
@@ -46,6 +54,25 @@ const userSchema = new mongoose.Schema({
   })
 
 
+  userSchema.methods.correctPassword = async function(candidatePassword , userPassword){
+
+    return await bcrypt.compare(candidatePassword , userPassword);
+  }
+
+  userSchema.methods.changePasswordAfter = async function(JWTTimeStamp){
+
+    if(this.passwordChnagedAt){
+      const changedTimestamp = parseInt(
+        this.passwordChangedAt.getTime() / 1000,
+        10
+      );
+  
+      return JWTTimeStamp < changedTimestamp;
+    }
+
+    return false;
+  
+  }
 
   const User = mongoose.model('User' , userSchema);
 

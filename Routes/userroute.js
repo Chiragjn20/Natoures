@@ -1,20 +1,27 @@
 const express = require('express')
-const fs = require('fs');
 const authController = require('./../Controller/authController')
-// const Users = JSON.parse(
-//     fs.readFileSync(`${__dirname}/../dev-data/data/users.json`)
-//   );
+const APIFeatures = require('./../utils/apiFeatures');
+const User = require('./../models/users');
+
+
   
-const getAllUsers = (req, res) => {
-    const time = req.requetTime;
+const getAllUsers = async (req, res , next) => {
+  try {
+    const users = await User.find();
     res.status(200).json({
-      requestedat: time,
       status: 'success',
-      results: Users.length,
+      results: users.length,
       data: {
-        Users,
+        users,
       },
     });
+  } catch (err) {
+    console.log(err)
+    res.status(400).json({
+      status: 'fail',
+      messgae: err,
+    });
+  }
   };
   
   const createUser = (req, res) => {
@@ -37,9 +44,14 @@ const getAllUsers = (req, res) => {
     res.send('done');
   };
 
+ 
+
+
   const router = express.Router();
 
   router.route('/').get(getAllUsers).post(createUser);
   router.post('/signup' , authController.signup)
+  router.post('/login' , authController.login)
+
 
   module.exports = router

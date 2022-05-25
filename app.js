@@ -13,13 +13,13 @@ const userRoute = require('./Routes/userroute')
 
 
 
-app.use(morgan('dev'));
+//app.use(morgan('dev'));
 
 
 
 app.use((req, res, next) => {
   req.requetTime = new Date().toISOString();
-  console.log('Middleare');
+  //console.log(req.headers);
   next();
 });
 
