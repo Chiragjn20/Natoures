@@ -1,76 +1,126 @@
 const mongoose = require('mongoose');
 
-const tourSchema = new mongoose.Schema({
+const tourSchema = new mongoose.Schema( {
     name: {
-      type : String ,
-      required : [true , 'Tour must have a name'],
+      type: String,
+      required: [true, 'A tour must have a name'],
       unique: true,
-      minlength: [5 , 'Tour atleast have length of 5']
-    } ,
-    duration :{
-        type : Number,
-        required : [true , 'Tour must have a duration']
-
+      trim: true,
+      maxlength: [40, 'A tour name must have less or equal then 40 characters'],
+      minlength: [10, 'A tour name must have more or equal then 10 characters']
+      // validate: [validator.isAlpha, 'Tour name must only contain characters']
     },
-    maxGroupSize :{
-        type : Number,
-        required : [true , 'Tour must have a grp size']
+    slug: String,
+    duration: {
+      type: Number,
+      required: [true, 'A tour must have a duration']
+    },
+    maxGroupSize: {
+      type: Number,
+      required: [true, 'A tour must have a group size']
     },
     difficulty: {
-        type : String ,
-        required : [true , 'Tour must have a difficulty level'],
-        enum :{
-          values :[ 'easy' , 'medium' , 'difficult' ],
-          message : 'Either easy medium or difficult'
-        }
-      },
-    rating :{
-      type: Number ,
-      default : 4.5,
-      min :[1 , "It must be atleast 1"],
-      max :[5 , "It must be less than 5 "]
-    },
-    ratingQuantity:{
-        type: Number ,
-        default : 0
-      },
-    price : {
-      type : Number,
-      required: [true , 'Tour must have a price']
-    }, 
-    priceDiscount :{
-      type: Number ,
-      //custom validator
-      validate :{
-          validator: function(val){
-            //this only points to current doc on NEW Document creation
-            return val < this.price
-      },
-      message : 'Discount must be less than actual price'  
-
+      type: String,
+      required: [true, 'A tour must have a difficulty'],
+      enum: {
+        values: ['easy', 'medium', 'difficult'],
+        message: 'Difficulty is either: easy, medium, difficult'
       }
-
     },
-    summary:{
-        type : String , 
-        trim : true,
-        required: true
+    ratingsAverage: {
+      type: Number,
+      default: 4.5,
+      min: [1, 'Rating must be above 1.0'],
+      max: [5, 'Rating must be below 5.0'],
+      set: val => Math.round(val * 10) / 10 // 4.666666, 46.6666, 47, 4.7
     },
-    discription:{
-        type : String ,
-        trim : true
+    ratingsQuantity: {
+      type: Number,
+      default: 0
     },
-    imageCover :{
-        type : String
+    price: {
+      type: Number,
+      required: [true, 'A tour must have a price']
     },
-    images : [String],
-    createdAT:{
-        type : Date,
-        defalut : Date.now()
+    priceDiscount: {
+      type: Number,
+      validate: {
+        validator: function(val) {
+          // this only points to current doc on NEW document creation
+          return val < this.price;
+        },
+        message: 'Discount price ({VALUE}) should be below regular price'
+      }
     },
-    startDates:[Date]
+    summary: {
+      type: String,
+      trim: true,
+      required: [true, 'A tour must have a description']
+    },
+    description: {
+      type: String,
+      trim: true
+    },
+    imageCover: {
+      type: String,
+      required: [true, 'A tour must have a cover image']
+    },
+    images: [String],
+    createdAt: {
+      type: Date,
+      default: Date.now(),
+      select: false
+    },
+    startDates: [Date],
+    secretTour: {
+      type: Boolean,
+      default: false
+    },
+    startLocation: {
+      // GeoJSON
+      type: {
+        type: String,
+        default: 'Point',
+        enum: ['Point']
+      },
+      coordinates: [Number],
+      address: String,
+      description: String
+    },
+    locations: [
+      {
+        type: {
+          type: String,
+          default: 'Point',
+          enum: ['Point']
+        },
+        coordinates: [Number],
+        address: String,
+        description: String,
+        day: Number
+      }
+    ],
+    guides: [
+      {
+        type: mongoose.Schema.ObjectId,
+        ref: 'User'
+      }
+    ]
+  },
+  {
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true }
   })
 
   const Tour = mongoose.model('Tour' , tourSchema);
+  
+  tourSchema.pre(/^find/, function(next) {
+    this.populate({
+      path: 'guides',
+      select: '-__v -passwordChangedAt'
+    });
+  
+    next();
+  });
 
   module.exports = Tour;

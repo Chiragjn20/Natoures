@@ -55,7 +55,7 @@ const addTour = async (req, res) => {
 
 const getTourbyId = async (req, res) => {
   try {
-    const tour = await Tour.findById(req.params.id);
+    const tour = await Tour.findById(req.params.id)
     const time = req.requetTime;
     res.status(200).json({
       requestedat: time,
