@@ -113,7 +113,17 @@ const tourSchema = new mongoose.Schema( {
   })
 
   const Tour = mongoose.model('Tour' , tourSchema);
-  
+//virtual populate
+tourSchema.virtual('reviews' , {
+  ref: 'Reviews',
+  foreignField : 'tour',
+  localField : '_id'
+} )
+
+  tourSchema.index({price : 1 , ratingsAverage : -1})
+  tourSchema.index({slug : 1})
+
+
   tourSchema.pre(/^find/, function(next) {
     this.populate({
       path: 'guides',

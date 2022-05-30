@@ -34,10 +34,10 @@ const userSchema = new mongoose.Schema({
         select : false
 
     },
-    role :{
-      type : String,
-      enum : ['user', 'guide' ,'lead-guide' , 'admin'],
-      default : 'user'
+    role: {
+      type: String,
+      enum: ['user', 'guide', 'lead-guide', 'admin'],
+      default: 'user'
     },
     photo : String,
     passwordChangedAt : Date,
