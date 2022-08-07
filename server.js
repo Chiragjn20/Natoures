@@ -5,9 +5,7 @@ require('dotenv').config()
 
 
 mongoose
-  .connect(
-    process.env.DATABASE
-    )
+  .connect(process.env.DATABASE)
   .then(() => console.log('Db connection successful'));
 
 

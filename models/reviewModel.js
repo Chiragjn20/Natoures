@@ -98,6 +98,6 @@ reviewSchema.post(/^findOneAnd/, async function() {
   await this.r.constructor.calcAverageRatings(this.r.tour);
 });
 
-const Review = mongoose.model('Review', reviewSchema);
+const Review = mongoose.model('Reviews', reviewSchema);
 
 module.exports = Review;

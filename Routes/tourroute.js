@@ -14,6 +14,7 @@ const aliasTopTours = (req, res, next) => {
   next();
 };
 
+
 const getTour = async (req, res) => {
   try {
     const features = new APIFeatures(Tour.find(), req.query)
@@ -56,25 +57,28 @@ const addTour = async (req, res) => {
   }
 };
 
-const getTourbyId = async (req, res) => {
-  try {
-    const tour = await Tour.findById(req.params.id).populate('reviwes');
-    const time = req.requetTime;
-    res.status(200).json({
-      requestedat: time,
-      status: 'success',
-      results: tour.length,
-      data: {
-        tour,
-      },
-    });
-  } catch (err) {
-    res.status(400).json({
-      status: 'failed',
-      messgae: 'error occured',
-    });
-  }
-};
+// const getTourbyId = async (req, res) => {
+//   try {
+//     const tour = await Tour.findById(req.params.id).populate('reviwes');
+//     const time = req.requetTime;
+//     res.status(200).json({
+//       requestedat: time,
+//       status: 'success',
+//       results: tour.length,
+//       data: {
+//         tour,
+//       },
+//     });
+//   } catch (err) {
+//     res.status(400).json({
+//       status: 'failed',
+//       messgae: 'error occured',
+//     });
+//   }
+// };
+
+
+const getTourbyId = handleFactory.getOne(Tour) 
 
 const updateTour = async (req, res) => {
   try {
@@ -234,7 +238,7 @@ const getDistances = catchAsync(async (req, res, next) => {
 });
 
 
-const router = express.Router();
+const router = express.Router({ mergeParams: true });
 
 router.use('/:tourId/reviews', reviewRouter);
 router.route('/tour-states').get(getTourStates);

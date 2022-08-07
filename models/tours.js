@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const slugify = require('slugify');
 
 const tourSchema = new mongoose.Schema( {
     name: {
@@ -122,8 +123,21 @@ tourSchema.virtual('reviews' , {
 
   tourSchema.index({price : 1 , ratingsAverage : -1})
   tourSchema.index({slug : 1})
+  tourSchema.index({ startLocation: '2dsphere' });
 
+  tourSchema.pre('save', function(next) {
+    console.log('Inside of the function')
+      this.slug = slugify(this.name, { lower: true });
+      next();
+    });
 
+  tourSchema.pre(/^find/, function(next) {
+    this.find({ secretTour: { $ne: true } });
+  
+    this.start = Date.now();
+    next();
+  });
+  
   tourSchema.pre(/^find/, function(next) {
     this.populate({
       path: 'guides',
@@ -132,5 +146,12 @@ tourSchema.virtual('reviews' , {
   
     next();
   });
+  
+  tourSchema.post(/^find/, function(docs, next) {
+    console.log(`Query took ${Date.now() - this.start} milliseconds!`);
+    next();
+  });
+
+
 
   module.exports = Tour;

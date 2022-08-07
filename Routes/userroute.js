@@ -6,6 +6,9 @@ const AppError = require('./../utils/appError');
 const catchAsync = require('./../utils/catchAsync');
 const reviewController = require('./../Controller/reviewController');
 const factory = require('./../Controller/handlerFactory');
+const multer = require('multer')
+
+const upload = multer({dest : 'public/img/users'})
 
 const filterObj = (obj, ...allowedFields) => {
   const newObj = {};
@@ -35,6 +38,9 @@ const getAllUsers = async (req, res, next) => {
 };
 
 const updateMe = catchAsync(async (req, res, next) => {
+console.log(req.file);
+console.log(req.body);
+
   // 1) Create error if user POSTs password data
   if (req.body.password || req.body.passwordConfirm) {
     return next(
@@ -110,7 +116,8 @@ const getUser = factory.getOne(User);
 router.get('/me', authController.protect, getMe, getUser);
 router.post('/signup', authController.signup);
 router.post('/login', authController.login);
-router.patch('/updateMe', authController.protect, updateMe);
+router.get('/logout', authController.logout);
+router.patch('/updateMe', upload.single('photo'), authController.protect, updateMe);
 router.delete('/deleteMe', authController.protect, deleteMe);
 router.post('/forgetPassword', authController.forgetPassword);
 router.patch('/resetpassword/:token', authController.resetPassword);

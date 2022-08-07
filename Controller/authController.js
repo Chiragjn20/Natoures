@@ -6,7 +6,7 @@ const AppError = require('./../utils/appError');
 const catchAsync = require('./../utils/catchAsync');
 const sendEmail = require('./../utils/email');
 const crypto = require('crypto');
- 
+
 const signToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRES,
@@ -19,7 +19,7 @@ const createSendToken = (user, statusCode, res) => {
     expires: new Date(
       Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000
     ),
-    httpOnly: true
+    httpOnly: true,
   };
   if (process.env.NODE_ENV === 'production') cookieOptions.secure = true;
 
@@ -32,8 +32,8 @@ const createSendToken = (user, statusCode, res) => {
     status: 'success',
     token,
     data: {
-      user
-    }
+      user,
+    },
   });
 };
 
@@ -43,13 +43,12 @@ exports.signup = catchAsync(async (req, res, next) => {
     email: req.body.email,
     password: req.body.password,
     passwordConfirm: req.body.passwordConfirm,
-    role : req.body.role,
-    passwordChangedAt : req.body.passwordChangedAt
+    role: req.body.role,
+    passwordChangedAt: req.body.passwordChangedAt,
   });
 
   createSendToken(newUser, 201, res);
 });
-
 
 exports.login = async (req, res, next) => {
   const { email, password } = req.body;
@@ -69,55 +68,13 @@ exports.login = async (req, res, next) => {
   createSendToken(user, 200, res);
 };
 
-// exports.protect = async (req, res, next) => {
-//   try {
-//     // 1 get token and check if it exists
-
-//     let token;
-//     if (
-//       req.headers.authorization &&
-//       req.headers.authorization.startsWith('Bearer')
-//     ) {
-//       token = req.headers.authorization.split(' ')[1];
-//     }
-//     if (!token) {
-//       return res.status(400).json({
-//         status: 'fail',
-//         messgae: 'Token is undefined',
-//       });
-//     }
-
-//     //  console.log(token)
-//     // 2 verification token
-
-//     const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
-//     // 3 Check if user still exist
-//     const freshUser = await User.findById(decoded.id);
-
-//     if (!freshUser) {
-//       return res.status(400).json({
-//         status: 'fail',
-//         messgae: 'User token does not exist',
-//       });
-//     }
-
-//     // 4 check if user changed the password after token is issued
-//     // if(freshUser.changePasswordAfter(decoded.iat)){
-//     //     return res.status(400).json({
-//     //         status: 'fail',
-//     //         messgae: 'User password changed'
-//     //       });
-//     // }
-//     req.user = freshUser;
-//     next();
-//   } catch (err) {
-//     return res.status(400).json({
-//       status: 'fail',
-//       messgae: err,
-//     });
-//   }
-// };
-
+exports.logout = (req, res) => {
+  res.cookie('jwt', 'loggedout', {
+    expires: new Date(Date.now() + 10 * 1000),
+    httpOnly: true,
+  });
+  res.status(200).json({ status: 'success' });
+};
 
 exports.protect = catchAsync(async (req, res, next) => {
   // 1) Getting token and check of it's there
@@ -127,6 +84,8 @@ exports.protect = catchAsync(async (req, res, next) => {
     req.headers.authorization.startsWith('Bearer')
   ) {
     token = req.headers.authorization.split(' ')[1];
+  } else if (req.cookies.jwt) {
+    token = req.cookies.jwt;
   }
 
   if (!token) {
@@ -158,8 +117,44 @@ exports.protect = catchAsync(async (req, res, next) => {
 
   // GRANT ACCESS TO PROTECTED ROUTE
   req.user = currentUser;
+  res.locals.user = currentUser;
+
   next();
 });
+
+// Only for rendered pages, no errors!
+exports.isLoggedIn = async (req, res, next) => {
+  console.log()
+  if (req.cookies.jwt) {
+    try {
+      // 1) verify token
+
+      const decoded = await promisify(jwt.verify)(
+        req.cookies.jwt,
+        process.env.JWT_SECRET
+      );
+
+      // 2) Check if user still exists
+      const currentUser = await User.findById(decoded.id);
+      if (!currentUser) {
+        return next();
+      }
+      res.locals.user = currentUser;
+      return next();
+      // 3) Check if user changed password after the token was issued
+      // if (currentUser.changedPasswordAfter(decoded.iat)) {
+      //   return next();
+      // }
+      // console.log('verified');
+
+      // THERE IS A LOGGED IN USER
+     
+    } catch (err) {
+      return next();
+    }
+  }
+   next();
+};
 
 exports.restrictTo = (...roles) => {
   return (req, res, next) => {
@@ -189,33 +184,30 @@ exports.forgetPassword = catchAsync(async (req, res, next) => {
     'host'
   )}/api/v1/users/resetpassword/${resetToken}`;
 
-    const message =`forgot your password? submit a patch request  and passwordConfirm to: ${resetURL}.\nIf you didn't forget your password, please ignore this email!`
+  const message = `forgot your password? submit a patch request  and passwordConfirm to: ${resetURL}.\nIf you didn't forget your password, please ignore this email!`;
 
-    try{
-      await sendEmail({
-        email : user.email,
-        subject : 'Password reset token valid for 10 mins',
-        message
-      })
-  
-        res.status(200).json({
-          state : "success",
-          message : 'Token is sent to email'
-        })
-    }catch(err){
+  try {
+    await sendEmail({
+      email: user.email,
+      subject: 'Password reset token valid for 10 mins',
+      message,
+    });
 
-      user.passwordResetToken = undefined
-      user.passwordResetExpires = undefined
-      await user.save({ validateBeforeSave: false });
+    res.status(200).json({
+      state: 'success',
+      message: 'Token is sent to email',
+    });
+  } catch (err) {
+    user.passwordResetToken = undefined;
+    user.passwordResetExpires = undefined;
+    await user.save({ validateBeforeSave: false });
 
-      return res.status(500).json({
-        status: 'fail',
-        messgae: err,
-      });
-
-    }
+    return res.status(500).json({
+      status: 'fail',
+      messgae: err,
+    });
+  }
 });
-
 
 exports.resetPassword = catchAsync(async (req, res, next) => {
   // 1) Get user based on the token
@@ -226,7 +218,7 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
 
   const user = await User.findOne({
     passwordResetToken: hashedToken,
-    passwordResetExpires: { $gt: Date.now() }
+    passwordResetExpires: { $gt: Date.now() },
   });
 
   // 2) If token has not expired, and there is user, set the new password

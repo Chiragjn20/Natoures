@@ -2,15 +2,20 @@
   "name": "express",
   "version": "1.0.0",
   "description": "learning of express and node",
-  "main": "index.js",
   "scripts": {
     "start": "nodemon server.js",
-    "debug": "ndb server.js"
+    "debug": "ndb server.js",
+    "watch": "parcel watch ./public/js/*.js --dist-dir .public/js/dist --port 69",
+    "build": "parcel build ./public/js/*.js --dist-dir ./public/js/dist"
   },
   "author": "chirag jain",
   "license": "ISC",
   "dependencies": {
+    "@babel/polyfill": "^7.12.1",
+    "axios": "^0.27.2",
     "bcryptjs": "^2.4.3",
+    "cookie-parser": "^1.4.6",
+    "cors": "^2.8.5",
     "dotenv": "^16.0.1",
     "express": "^4.18.1",
     "express-mongo-sanitize": "^2.2.0",
@@ -18,13 +23,18 @@
     "helmet": "^5.1.0",
     "hpp": "^0.2.3",
     "jsonwebtoken": "^8.5.1",
-    "mongoose": "^6.3.4",
+    "mongoose": "^6.4.3",
     "morgan": "^1.10.0",
+    "multer": "^1.4.5-lts.1",
     "nodemailer": "^6.7.5",
     "prettier": "^2.6.2",
+    "pug": "^3.0.2",
+    "slugify": "^1.6.5",
     "xss-clean": "^0.1.1"
   },
   "devDependencies": {
-    "ndb": "^1.1.5"
+    "ndb": "^1.1.5",
+    "parcel": "^2.6.2",
+    "process": "^0.11.10"
   }
 }
