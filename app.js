@@ -62,6 +62,8 @@ const limiter = rateLimit({
 const tourRoute = require('./Routes/tourroute')
 const userRoute = require('./Routes/userroute')
 const reviewRoute = require('./Routes/reviewroute')
+const bookingRoute = require('./Routes/bookingRoutes')
+
 const authController = require("./Controller/authController")
 
 app.use('/api' , limiter)
@@ -86,5 +88,6 @@ app.use('/', viewRouter);
 app.use ('/api/v1/tours' , tourRoute);
 app.use ('/api/v1/users' , userRoute);
 app.use ('/api/v1/reviews' , reviewRoute);
+app.use ('/api/v1/bookings' , bookingRoute);
 
 module.exports = app;
